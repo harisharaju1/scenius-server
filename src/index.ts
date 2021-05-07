@@ -15,20 +15,25 @@ import connectRedis from "connect-redis";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import { MyContext } from "./types";
 import cors from "cors";
+import { sendEmail } from "./utils/sendEmail";
 
 const RedisStore = connectRedis(session);
 const redisClient = redis.createClient();
 
 const main = async () => {
+  sendEmail("bob@bob.com", "hello there!");
   const orm = await MikroORM.init(mikroConfig);
+  //mikroConfig is an object with details of DB, entities, login details, path to migrations storage folder path
   await orm.getMigrator().up();
   const app = express();
+  //implementing the CORS middleware to allow connections from the client app
   app.use(
     cors({
       origin: "http://localhost:3000",
       credentials: true,
     })
   );
+
   app.use(
     session({
       name: COOKIE_NAME,
