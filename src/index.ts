@@ -4,6 +4,7 @@ import express from "express";
 import { ApolloServer } from "apollo-server-express";
 //to host GraphQL API queries
 import { buildSchema } from "type-graphql";
+//to be able to build schema in GraphQL usinf TS
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
 import "reflect-metadata";
