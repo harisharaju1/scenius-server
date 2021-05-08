@@ -13,14 +13,16 @@ export async function sendEmail(to: string, html: string) {
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: "ut57oss3bo6fvkl2@ethereal.email", // generated ethereal user
-      pass: "SEg6p8U4d9P9xMfrYD", // generated ethereal password
+      user: "soyydfhrqf7nesqi@ethereal.email", // generated ethereal user
+      pass: "X1q1YJTNQYYDa7aZXr", // generated ethereal password
     },
   });
 
+  //console.log(transporter);
+
   // send mail with defined transport object
   let info = await transporter.sendMail({
-    from: '"Fred Foo 👻" <foo@example.com>', // sender address
+    from: "Scenius Dev <scenius@gmai.com>", // sender address
     to: to, // list of receivers
     subject: "Change Password", // Subject line
     html, // plain text body
