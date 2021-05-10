@@ -1,5 +1,4 @@
-import { MikroORM } from "@mikro-orm/core";
-import mikroConfig from "./mikro-orm.config";
+import { createConnection } from "typeorm";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 //to host GraphQL API queries
@@ -17,16 +16,22 @@ import { MyContext } from "./types";
 import cors from "cors";
 // import { sendEmail } from "./utils/sendEmail";
 import { User } from "./entities/User";
+import { Post } from "./entities/Post";
 
 const RedisStore = connectRedis(session);
 const redis = new Redis();
 
 const main = async () => {
-  //sendEmail("bob@bob.com", "hello there!");
-  const orm = await MikroORM.init(mikroConfig);
-  //mikroConfig is an object with details of DB, entities, login details, path to migrations storage folder path
-  //orm.em.nativeDelete(User, {});
-  await orm.getMigrator().up();
+  const conn = await createConnection({
+    type: "postgres",
+    database: "scenius2",
+    username: "postgres",
+    password: "postgres",
+    logging: true,
+    synchronize: true,
+    entities: [User, Post],
+  });
+
   const app = express();
   //implementing the CORS middleware to allow connections from the client app
   app.use(
@@ -63,7 +68,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }): MyContext => ({ em: orm.em, req, res, redis }),
+    context: ({ req, res }): MyContext => ({ req, res, redis }),
   });
 
   apolloServer.applyMiddleware({ app, cors: false });

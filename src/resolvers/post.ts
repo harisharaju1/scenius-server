@@ -1,54 +1,86 @@
 import { Post } from "../entities/Post";
-import { MyContext } from "../types";
-import { Resolver, Query, Ctx, Arg, Mutation } from "type-graphql";
+import {
+  Resolver,
+  Query,
+  Arg,
+  Mutation,
+  InputType,
+  Field,
+  Ctx,
+  UseMiddleware,
+} from "type-graphql";
+import { MyContext } from "src/types";
+import { isAuth } from "../middleware/isAuth";
+import { getConnection } from "typeorm";
+
+@InputType()
+class PostInput {
+  @Field()
+  title: string;
+  @Field()
+  text: string;
+}
 
 @Resolver()
 export class PostResolver {
   //to get all posts available
   @Query(() => [Post])
-  posts(@Ctx() { em }: MyContext): Promise<Post[]> {
-    return em.find(Post, {});
+  async posts(
+    @Arg("limit") limit: number,
+    @Arg("cursor", () => String, {
+      nullable: true,
+    })
+    cursor?: string
+  ): Promise<Post[]> {
+    const realLimit = Math.min(50, limit);
+    const qb = await getConnection()
+      .getRepository(Post)
+      .createQueryBuilder("post")
+      .orderBy('"createdAt"', "DESC")
+      .take(realLimit);
+    if (cursor) {
+      qb.where('"createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) });
+    }
+    return qb.getMany();
   }
 
   @Query(() => Post, { nullable: true })
-  post(@Arg("id") id: number, @Ctx() { em }: MyContext): Promise<Post | null> {
-    return em.findOne(Post, { id });
+  post(@Arg("id") id: number): Promise<Post | undefined> {
+    return Post.findOne(id);
   }
 
   @Mutation(() => Post, { nullable: true })
+  @UseMiddleware(isAuth)
   async createPost(
-    @Arg("title") title: string,
-    @Arg("id") id: number,
-    @Ctx() { em }: MyContext
-  ): Promise<Post | null> {
-    const post = em.create(Post, { title, id });
-    await em.persistAndFlush(post);
+    @Arg("input") input: PostInput,
+    @Ctx() { req }: MyContext
+  ): Promise<Post> {
+    const post = Post.create({
+      ...input,
+      creatorId: req.session.userId,
+    }).save();
+    //using Post.create() to insert a post will not create a new post in cases where the the primary key given in the input is one that already exists, it either updates in case it detects differences, and does nothing if the post with the same values already exists
     return post;
   }
 
   @Mutation(() => Post, { nullable: true })
   async updatePost(
     @Arg("title", () => String, { nullable: true }) title: string,
-    @Arg("id") id: number,
-    @Ctx() { em }: MyContext
+    @Arg("id") id: number
   ): Promise<Post | null> {
-    const post = await em.findOne(Post, { id });
+    const post = await Post.findOne(id);
     if (!post) {
       return null;
     }
     if (typeof title !== "undefined") {
-      post.title = title;
-      await em.persistAndFlush(post);
+      await Post.update({ id }, { title });
     }
     return post;
   }
 
   @Mutation(() => Boolean)
-  async deletePost(
-    @Arg("id") id: number,
-    @Ctx() { em }: MyContext
-  ): Promise<boolean> {
-    await em.nativeDelete(Post, { id });
+  async deletePost(@Arg("id") id: number): Promise<boolean> {
+    await Post.delete(id);
     return true;
   }
 }
