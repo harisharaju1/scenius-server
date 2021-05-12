@@ -38,30 +38,23 @@ var __importDefault =
     return mod && mod.__esModule ? mod : { default: mod };
   };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendEmail = void 0;
-const nodemailer_1 = __importDefault(require("nodemailer"));
-function sendEmail(to, html) {
-  return __awaiter(this, void 0, void 0, function* () {
-    let testAccount = yield nodemailer_1.default.createTestAccount();
-    // console.log(testAccount);
-    let transporter = nodemailer_1.default.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false,
-      auth: {
-        user: "soyydfhrqf7nesqi@ethereal.email",
-        pass: "X1q1YJTNQYYDa7aZXr",
-      },
-    });
-    let info = yield transporter.sendMail({
-      from: "Scenius Dev <scenius@gmai.com>",
-      to: to,
-      subject: "Change Password",
-      html,
-    });
-    // console.log("Message sent: %s", info.messageId);
-    // console.log("Preview URL: %s", nodemailer_1.default.getTestMessageUrl(info));
-  });
-}
-exports.sendEmail = sendEmail;
-//# sourceMappingURL=sendEmail.js.map
+exports.createUpdootLoader = void 0;
+const Updoot_1 = require("../entities/Updoot");
+const dataloader_1 = __importDefault(require("dataloader"));
+const createUpdootLoader = () =>
+  new dataloader_1.default((keys) =>
+    __awaiter(void 0, void 0, void 0, function* () {
+      const updoots = yield Updoot_1.Updoot.findByIds(keys);
+      const updootIdsToUpdoot = {};
+      updoots.forEach((u) => {
+        updootIdsToUpdoot[`${u.userId}|${u.postId}`] = u;
+      });
+      const sortedUpdoots = keys.map(
+        (key) => updootIdsToUpdoot[`${key.userId}|${key.postId}`]
+      );
+      // console.log("sortedUpdoots" + sortedUpdoots);
+      return sortedUpdoots;
+    })
+  );
+exports.createUpdootLoader = createUpdootLoader;
+//# sourceMappingURL=createUpdootLoader.js.map

@@ -1,22 +1,24 @@
-import { createConnection } from "typeorm";
-import express from "express";
 import { ApolloServer } from "apollo-server-express";
-//to host GraphQL API queries
-import { buildSchema } from "type-graphql";
-//to be able to build schema in GraphQL usinf TS
-import { HelloResolver } from "./resolvers/hello";
-import { PostResolver } from "./resolvers/post";
-import "reflect-metadata";
-import { UserResolver } from "./resolvers/user";
-import Redis from "ioredis";
-import session from "express-session";
 import connectRedis from "connect-redis";
-import { COOKIE_NAME, __prod__ } from "./constants";
-import { MyContext } from "./types";
 import cors from "cors";
+import express from "express";
+import session from "express-session";
+import Redis from "ioredis";
+import path from "path";
+import "reflect-metadata";
+import { buildSchema } from "type-graphql";
+import { createConnection } from "typeorm";
+import { COOKIE_NAME, __prod__ } from "./constants";
+import { Post } from "./entities/Post";
+import { Updoot } from "./entities/Updoot";
 // import { sendEmail } from "./utils/sendEmail";
 import { User } from "./entities/User";
-import { Post } from "./entities/Post";
+import { HelloResolver } from "./resolvers/hello";
+import { PostResolver } from "./resolvers/post";
+import { UserResolver } from "./resolvers/user";
+import { MyContext } from "./types";
+import { createUpdootLoader } from "./utils/createUpdootLoader";
+import { createUserLoader } from "./utils/createUserLoader";
 
 const RedisStore = connectRedis(session);
 const redis = new Redis();
@@ -29,8 +31,11 @@ const main = async () => {
     password: "postgres",
     logging: true,
     synchronize: true,
-    entities: [User, Post],
+    migrations: [path.join(__dirname, "./migrations/*")],
+    entities: [User, Post, Updoot],
   });
+  //npx typeorm migration:create -n FakePosts
+  await conn.runMigrations();
 
   const app = express();
   //implementing the CORS middleware to allow connections from the client app
@@ -55,7 +60,6 @@ const main = async () => {
         secure: __prod__,
         sameSite: "lax", //protect agaisnt csrf
       },
-      //saveUninitialized: false,
       secret: "sfhsyjagfsd",
       saveUninitialized: false,
       resave: false,
@@ -68,7 +72,13 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }): MyContext => ({ req, res, redis }),
+    context: ({ req, res }): MyContext => ({
+      req,
+      res,
+      redis,
+      userLoader: createUserLoader(),
+      updootLoader: createUpdootLoader(),
+    }),
   });
 
   apolloServer.applyMiddleware({ app, cors: false });
