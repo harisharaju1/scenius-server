@@ -73,7 +73,7 @@ let PostResolver = class PostResolver {
             return updoot ? updoot.value : null;
         });
     }
-    posts(limit, { req }, cursor) {
+    posts(limit, cursor) {
         return __awaiter(this, void 0, void 0, function* () {
             const realLimit = Math.min(50, limit);
             const realLimitPlusOne = realLimit + 1;
@@ -186,9 +186,8 @@ __decorate([
     __param(1, type_graphql_1.Arg("cursor", () => String, {
         nullable: true,
     })),
-    __param(1, type_graphql_1.Ctx()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Object, String]),
+    __metadata("design:paramtypes", [Number, String]),
     __metadata("design:returntype", Promise)
 ], PostResolver.prototype, "posts", null);
 __decorate([

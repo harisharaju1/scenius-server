@@ -18,7 +18,7 @@ import { isAuth } from "../middleware/isAuth";
 import { getConnection, UpdateDateColumn } from "typeorm";
 import { Updoot } from "../entities/Updoot";
 import { User } from "../entities/User";
-import { createUpdootLoader } from "src/utils/createUpdootLoader";
+// import { createUpdootLoader } from "src/utils/createUpdootLoader";
 
 @InputType()
 class PostInput {
@@ -69,8 +69,6 @@ export class PostResolver {
     @Arg("cursor", () => String, {
       nullable: true,
     })
-    @Ctx()
-    { req }: MyContext,
     cursor?: string
   ): Promise<PaginatedPosts> {
     //fetching 21 posts

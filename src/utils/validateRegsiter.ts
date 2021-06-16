@@ -1,4 +1,4 @@
-import { UsernamePasswordInput } from "src/resolvers/UsernamePasswordInput";
+import { UsernamePasswordInput } from "src/utils/UsernamePasswordInput";
 
 export const validateRegsiter = (options: UsernamePasswordInput) => {
   if (options.username.length <= 4) {

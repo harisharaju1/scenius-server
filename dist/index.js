@@ -13,6 +13,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const apollo_server_express_1 = require("apollo-server-express");
+require("dotenv-safe/config");
 const connect_redis_1 = __importDefault(require("connect-redis"));
 const cors_1 = __importDefault(require("cors"));
 const express_1 = __importDefault(require("express"));
@@ -32,22 +33,22 @@ const user_1 = require("./resolvers/user");
 const createUpdootLoader_1 = require("./utils/createUpdootLoader");
 const createUserLoader_1 = require("./utils/createUserLoader");
 const RedisStore = connect_redis_1.default(express_session_1.default);
-const redis = new ioredis_1.default();
+const redis = new ioredis_1.default(process.env.REDIS_URL);
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const conn = yield typeorm_1.createConnection({
         type: "postgres",
-        database: "scenius2",
-        username: "postgres",
-        password: "postgres",
+        url: process.env.DATABASE_URL,
         logging: true,
-        synchronize: true,
+        synchronize: !constants_1.__prod__,
         migrations: [path_1.default.join(__dirname, "./migrations/*")],
         entities: [User_1.User, Post_1.Post, Updoot_1.Updoot],
     });
     yield conn.runMigrations();
     const app = express_1.default();
+    app.enable("trust proxy");
+    app.set("proxy", 1);
     app.use(cors_1.default({
-        origin: "http://localhost:3000",
+        origin: process.env.CORS_ORIGIN,
         credentials: true,
     }));
     app.use(express_session_1.default({
@@ -60,9 +61,10 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
             httpOnly: true,
             secure: constants_1.__prod__,
+            domain: constants_1.__prod__ ? "" : undefined,
             sameSite: "lax",
         },
-        secret: "sfhsyjagfsd",
+        secret: process.env.SESSION_SECRET,
         saveUninitialized: false,
         resave: false,
     }));
@@ -80,7 +82,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         }),
     });
     apolloServer.applyMiddleware({ app, cors: false });
-    app.listen(4000);
+    app.listen(parseInt(process.env.PORT));
 });
 main().catch((err) => {
     console.error(err);
