@@ -13,9 +13,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const apollo_server_express_1 = require("apollo-server-express");
-require("dotenv-safe/config");
 const connect_redis_1 = __importDefault(require("connect-redis"));
 const cors_1 = __importDefault(require("cors"));
+require("dotenv-safe/config");
 const express_1 = __importDefault(require("express"));
 const express_session_1 = __importDefault(require("express-session"));
 const ioredis_1 = __importDefault(require("ioredis"));
@@ -32,8 +32,6 @@ const post_1 = require("./resolvers/post");
 const user_1 = require("./resolvers/user");
 const createUpdootLoader_1 = require("./utils/createUpdootLoader");
 const createUserLoader_1 = require("./utils/createUserLoader");
-const RedisStore = connect_redis_1.default(express_session_1.default);
-const redis = new ioredis_1.default(process.env.REDIS_URL);
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     const conn = yield typeorm_1.createConnection({
         type: "postgres",
@@ -43,10 +41,10 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         migrations: [path_1.default.join(__dirname, "./migrations/*")],
         entities: [User_1.User, Post_1.Post, Updoot_1.Updoot],
     });
-    yield conn.runMigrations();
     const app = express_1.default();
-    app.enable("trust proxy");
-    app.set("proxy", 1);
+    const RedisStore = connect_redis_1.default(express_session_1.default);
+    const redis = new ioredis_1.default(process.env.REDIS_URL);
+    app.set("trust proxy", 1);
     app.use(cors_1.default({
         origin: process.env.CORS_ORIGIN,
         credentials: true,
@@ -82,7 +80,9 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         }),
     });
     apolloServer.applyMiddleware({ app, cors: false });
-    app.listen(parseInt(process.env.PORT));
+    app.listen(parseInt(process.env.PORT), () => {
+        console.log(`It's aliiiiiiiiiive!`);
+    });
 });
 main().catch((err) => {
     console.error(err);

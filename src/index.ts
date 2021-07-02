@@ -1,7 +1,7 @@
 import { ApolloServer } from "apollo-server-express";
-import "dotenv-safe/config";
 import connectRedis from "connect-redis";
 import cors from "cors";
+import "dotenv-safe/config";
 import express from "express";
 import session from "express-session";
 import Redis from "ioredis";
@@ -12,7 +12,6 @@ import { createConnection } from "typeorm";
 import { COOKIE_NAME, __prod__ } from "./constants";
 import { Post } from "./entities/Post";
 import { Updoot } from "./entities/Updoot";
-// import { sendEmail } from "./utils/sendEmail";
 import { User } from "./entities/User";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
@@ -20,9 +19,6 @@ import { UserResolver } from "./resolvers/user";
 import { MyContext } from "./types";
 import { createUpdootLoader } from "./utils/createUpdootLoader";
 import { createUserLoader } from "./utils/createUserLoader";
-
-const RedisStore = connectRedis(session);
-const redis = new Redis(process.env.REDIS_URL);
 
 const main = async () => {
   const conn = await createConnection({
@@ -34,12 +30,12 @@ const main = async () => {
     entities: [User, Post, Updoot],
   });
   //npx typeorm migration:create -n FakePosts
-  await conn.runMigrations();
+  // await conn.runMigrations();
 
   const app = express();
-  //implementing the CORS middleware to allow connections from the client app
-  app.enable("trust proxy");
-  app.set("proxy", 1);
+  const RedisStore = connectRedis(session);
+  const redis = new Redis(process.env.REDIS_URL);
+  app.set("trust proxy", 1);
   app.use(
     cors({
       origin: process.env.CORS_ORIGIN,
@@ -85,7 +81,9 @@ const main = async () => {
 
   apolloServer.applyMiddleware({ app, cors: false });
 
-  app.listen(parseInt(process.env.PORT));
+  app.listen(parseInt(process.env.PORT), () => {
+    console.log(`It's aliiiiiiiiiive!`);
+  });
 };
 
 main().catch((err) => {
