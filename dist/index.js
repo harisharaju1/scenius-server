@@ -14,6 +14,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const apollo_server_express_1 = require("apollo-server-express");
 const connect_redis_1 = __importDefault(require("connect-redis"));
+const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
 require("dotenv-safe/config");
 const express_1 = __importDefault(require("express"));
@@ -58,14 +59,15 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         cookie: {
             maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
             httpOnly: true,
-            secure: constants_1.__prod__,
-            domain: constants_1.__prod__ ? "" : undefined,
             sameSite: "lax",
+            secure: constants_1.__prod__,
+            domain: constants_1.__prod__ ? ".codeponder.com" : undefined,
         },
         secret: process.env.SESSION_SECRET,
         saveUninitialized: false,
         resave: false,
     }));
+    app.use(cookie_parser_1.default());
     const apolloServer = new apollo_server_express_1.ApolloServer({
         schema: yield type_graphql_1.buildSchema({
             resolvers: [hello_1.HelloResolver, post_1.PostResolver, user_1.UserResolver],

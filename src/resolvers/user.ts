@@ -16,8 +16,8 @@ import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
 import { User } from "../entities/User";
 import { MyContext } from "../types";
 import { sendEmail } from "../utils/sendEmail";
-import { validateRegsiter } from "../utils/validateRegsiter";
 import { UsernamePasswordInput } from "../utils/UsernamePasswordInput";
+import { validateRegsiter } from "../utils/validateRegsiter";
 
 @ObjectType()
 class FieldError {
@@ -50,7 +50,8 @@ export class UserResolver {
     @Arg("token") token: string,
     @Arg("newPassword") newPassword: string,
     @Ctx() { redis, req }: MyContext
-  ): Promise<UserResponse> {
+  ): //@Ctx() { req }: MyContext
+  Promise<UserResponse> {
     if (newPassword.length <= 6) {
       return {
         errors: [
@@ -63,6 +64,7 @@ export class UserResolver {
     }
     const key = FORGET_PASSWORD_PREFIX + token;
     const userId = await redis.get(key);
+    // const userId = "1";
     if (!userId) {
       return {
         errors: [
@@ -129,7 +131,7 @@ export class UserResolver {
   @Mutation(() => UserResponse)
   async register(
     @Arg("options") options: UsernamePasswordInput,
-    @Ctx() { req }: MyContext
+    @Ctx() { res }: MyContext
   ): Promise<UserResponse> {
     const errors = validateRegsiter(options);
     if (errors) {
@@ -169,7 +171,7 @@ export class UserResolver {
       }
       //console.log(error.message);
     }
-    req.session.userId = user.id;
+    // req.session.userId = user.id;
     return {
       user,
     };
@@ -179,7 +181,7 @@ export class UserResolver {
   async login(
     @Arg("usernameOrEmail") usernameOrEmail: string,
     @Arg("password") password: string,
-    @Ctx() { req }: MyContext
+    @Ctx() { req, res }: MyContext
   ): Promise<UserResponse> {
     const user = await User.findOne(
       usernameOrEmail.includes("@")
@@ -208,6 +210,7 @@ export class UserResolver {
       };
     }
     req.session.userId = user.id;
+
     return {
       user,
     };

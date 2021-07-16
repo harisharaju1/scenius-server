@@ -1,5 +1,6 @@
 import { ApolloServer } from "apollo-server-express";
 import connectRedis from "connect-redis";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import "dotenv-safe/config";
 import express from "express";
@@ -33,8 +34,10 @@ const main = async () => {
   // await conn.runMigrations();
 
   const app = express();
+
   const RedisStore = connectRedis(session);
   const redis = new Redis(process.env.REDIS_URL);
+
   app.set("trust proxy", 1);
   app.use(
     cors({
@@ -52,17 +55,19 @@ const main = async () => {
         disableTouch: true,
       }),
       cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 365 * 10, //10years
+        maxAge: 1000 * 60 * 60 * 24 * 365 * 10, // 10 years
         httpOnly: true,
-        secure: __prod__,
-        domain: __prod__ ? "" : undefined, //setup with your custom domain
-        sameSite: "lax", //protect agaisnt csrf
+        sameSite: "lax", // csrf
+        secure: __prod__, // cookie only works in https
+        domain: __prod__ ? ".codeponder.com" : undefined,
       },
       secret: process.env.SESSION_SECRET,
       saveUninitialized: false,
       resave: false,
     })
   );
+
+  app.use(cookieParser());
 
   //way to build a production-ready, self-documenting GraphQL API that can use data from any source
   const apolloServer = new ApolloServer({

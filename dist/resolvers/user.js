@@ -32,8 +32,8 @@ const uuid_1 = require("uuid");
 const constants_1 = require("../constants");
 const User_1 = require("../entities/User");
 const sendEmail_1 = require("../utils/sendEmail");
-const validateRegsiter_1 = require("../utils/validateRegsiter");
 const UsernamePasswordInput_1 = require("../utils/UsernamePasswordInput");
+const validateRegsiter_1 = require("../utils/validateRegsiter");
 let FieldError = class FieldError {
 };
 __decorate([
@@ -129,7 +129,7 @@ let UserResolver = class UserResolver {
             return yield User_1.User.findOne(req.session.userId);
         });
     }
-    register(options, { req }) {
+    register(options, { res }) {
         return __awaiter(this, void 0, void 0, function* () {
             const errors = validateRegsiter_1.validateRegsiter(options);
             if (errors) {
@@ -163,13 +163,12 @@ let UserResolver = class UserResolver {
                     };
                 }
             }
-            req.session.userId = user.id;
             return {
                 user,
             };
         });
     }
-    login(usernameOrEmail, password, { req }) {
+    login(usernameOrEmail, password, { req, res }) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield User_1.User.findOne(usernameOrEmail.includes("@")
                 ? { where: { email: usernameOrEmail.toLowerCase() } }
